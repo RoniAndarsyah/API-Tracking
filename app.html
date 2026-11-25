@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API Tracking D4TI</title>
+<meta name="description" content="Daftar, masuk, dan kelola pengiriman di dashboard simulasi API Tracking D4TI.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B3FE0'/%3E%3Cpath fill='%23fff' d='M7 8h3v16H7zM12 8h1.5v16H12zM15.5 8H20v16h-4.5z'/%3E%3Cpath fill='%23FFD60A' d='M22 8h3v16h-3z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Overpass+Mono:wght@400;500;600;700&family=Overpass:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --ink: #0E1A3A;
+  --ink-2: #434E6B;
+  --ink-3: #626D8A;
+  --paper: #FFFFFF;
+  --mist: #F2F4FA;
+  --line: #DCE1EE;
+  --field: #AEB7CF;
+  --cobalt: #1B3FE0;
+  --cobalt-deep: #142FB0;
+  --cobalt-soft: #E9EDFE;
+  --hivis: #FFD60A;
+  --hivis-soft: #FFF5B8;
+  --get: #1B6AD0;    --get-bg: #E9F2FE;
+  --post: #0A7F57;   --post-bg: #E6F6EF;
+  --put: #AD5B00;    --put-bg: #FDF1E1;
+  --delete: #CE2437; --delete-bg: #FDEAEC;
+  --display: "Overpass", "Segoe UI", system-ui, sans-serif;
+  --body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  --mono: "Overpass Mono", ui-monospace, Consolas, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--mist); color: var(--ink); font: 400 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, ol, ul, pre, table, dl, dd { margin: 0; padding: 0; }
+ol, ul { list-style: none; }
+a { color: var(--cobalt); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+code { font-family: var(--mono); font-size: .92em; }
+:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 2px; border-radius: 4px; }
+h1:focus { outline: none; }
+[hidden] { display: none !important; }
+
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
+.brand svg { width: 32px; height: 32px; flex: none; }
+.brand-name { font: 900 19px/1 var(--display); letter-spacing: -.02em; padding-top: 3px; white-space: nowrap; }
+.brand-name span { color: var(--cobalt); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px;
+  background: #fff; border: 1px solid var(--field); border-radius: 8px;
+  font: 600 15px/1 var(--body); color: var(--ink); text-decoration: none; white-space: nowrap;
+  transition: background-color .15s, border-color .15s;
+}
+.btn:hover { border-color: var(--cobalt); }
+.btn-primary { background: var(--cobalt); border-color: var(--cobalt); color: #fff; }
+.btn-primary:hover { background: var(--cobalt-deep); border-color: var(--cobalt-deep); }
+.btn-danger { background: var(--delete); border-color: var(--delete); color: #fff; }
+.btn-danger:hover { background: #AD1B2C; border-color: #AD1B2C; }
+.btn-block { width: 100%; }
+.btn-text { background: none; border: 0; padding: 4px 0; color: var(--ink-2); font-weight: 500; font-size: 14.5px; text-decoration: underline; text-underline-offset: 3px; }
+.btn-text:hover { color: var(--cobalt); }
+
+.field { display: block; margin-bottom: 16px; }
+.field-label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14.5px; }
+.input {
+  width: 100%; height: 46px; padding: 0 13px;
+  background: #fff; border: 1px solid var(--field); border-radius: 8px;
+}
+.input:focus-visible { outline-offset: 0; border-color: var(--cobalt); }
+.input[aria-invalid="true"] { border-color: var(--delete); }
+.field-error { margin-top: 5px; color: var(--delete); font-size: 14px; line-height: 1.35; }
+.password { position: relative; }
+.password .input { padding-right: 88px; }
+.password button {
+  position: absolute; right: 6px; top: 6px; height: 34px; padding: 0 10px;
+  background: none; border: 0; border-radius: 6px;
+  color: var(--cobalt); font-weight: 600; font-size: 14px;
+}
+.form-error { margin-bottom: 16px; padding: 10px 12px; background: var(--delete-bg); border-radius: 8px; color: #9E1626; font-size: 15px; line-height: 1.4; }
+.form-note { margin-bottom: 16px; padding: 10px 12px; background: var(--hivis-soft); border-radius: 8px; font-size: 15px; line-height: 1.4; }
+
+/* Halaman masuk dan daftar: kartu lembar resi */
+.auth { min-height: 100vh; min-height: 100dvh; display: grid; justify-items: center; align-content: center; gap: 22px; padding: 32px 16px; }
+.auth-top { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.auth-top a:last-child { font-size: 15px; font-weight: 500; text-decoration: none; }
+.waybill { width: 100%; max-width: 440px; filter: drop-shadow(0 0 1px rgba(14, 26, 58, .42)) drop-shadow(0 18px 28px rgba(14, 26, 58, .11)); }
+.waybill-top, .waybill-stub { background: var(--paper); --notch: 11px; }
+.waybill-top {
+  padding: 28px clamp(20px, 5vw, 32px) 26px; border-radius: 14px 14px 0 0;
+  -webkit-mask: radial-gradient(circle var(--notch) at 0 100%, transparent 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 100%, transparent 97%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle var(--notch) at 0 100%, transparent 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 100%, transparent 97%, #000) right / 51% 100% no-repeat;
+}
+.waybill-top:only-child { border-radius: 14px; -webkit-mask: none; mask: none; }
+.waybill-stub {
+  position: relative; padding: 20px clamp(20px, 5vw, 32px) 24px; border-radius: 0 0 14px 14px;
+  -webkit-mask: radial-gradient(circle var(--notch) at 0 0, transparent 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 0, transparent 97%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle var(--notch) at 0 0, transparent 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 0, transparent 97%, #000) right / 51% 100% no-repeat;
+}
+.waybill-stub::before { content: ""; position: absolute; left: 18px; right: 18px; top: 0; border-top: 2px dashed var(--line); }
+.auth h1 { font: 800 32px/1.12 var(--display); letter-spacing: -.028em; }
+.auth-lede { margin: 6px 0 22px; color: var(--ink-2); }
+.auth-switch { margin-top: 16px; text-align: center; font-size: 15px; color: var(--ink-2); }
+.demo-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 14.5px; }
+.demo-row span { color: var(--ink-3); }
+.demo-row code { overflow-wrap: anywhere; text-align: right; }
+.stub-title { font-weight: 600; margin-bottom: 6px; }
+.waybill-stub .btn { margin-top: 12px; }
+.auth-foot { max-width: 440px; font-size: 14px; line-height: 1.4; color: var(--ink-3); text-align: center; }
+
+/* Kerangka dashboard */
+.shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+.side {
+  position: sticky; top: 0; height: 100vh; height: 100dvh;
+  display: flex; flex-direction: column; gap: 24px; padding: 20px 14px;
+  background: #fff; border-right: 1px solid var(--line);
+}
+.side .brand { padding-inline: 8px; }
+.side-nav { display: grid; gap: 2px; }
+.side-nav a {
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  border-radius: 8px; color: var(--ink-2); font-weight: 500; text-decoration: none;
+}
+.side-nav a:hover { background: var(--mist); color: var(--ink); }
+.side-nav a[aria-current="page"] { background: var(--cobalt-soft); color: var(--cobalt-deep); font-weight: 600; }
+.side-nav svg { width: 18px; height: 18px; flex: none; }
+.side-foot { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--line); min-width: 0; }
+.side-user { font-weight: 600; overflow-wrap: anywhere; line-height: 1.3; }
+.side-mail { font-size: 13.5px; color: var(--ink-3); overflow-wrap: anywhere; }
+.side-actions { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 8px; }
+
+.main { min-width: 0; padding: clamp(20px, 3vw, 36px); }
+.main-inner { max-width: 1120px; margin-inline: auto; }
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 22px; }
+.page-head h1 { font: 800 clamp(28px, 3vw, 36px)/1.12 var(--display); letter-spacing: -.028em; }
+.page-head p { color: var(--ink-2); margin-top: 3px; }
+.dummy-tag { padding: 5px 9px 3px; background: var(--hivis-soft); border-radius: 5px; font: 500 12.5px/1.2 var(--mono); }
+
+.card { min-width: 0; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px var(--line); }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 14px; }
+.card h2 { font: 800 19px/1.25 var(--display); letter-spacing: -.012em; }
+.card-sub { font-size: 14px; color: var(--ink-3); }
+
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.tile-label { font-size: 14.5px; color: var(--ink-2); }
+.tile-value { margin-top: 2px; font: 800 34px/1.15 var(--display); letter-spacing: -.025em; }
+.tile-note { font-size: 14px; color: var(--ink-3); }
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 14px; margin-bottom: 14px; }
+
+/* Grafik batang */
+.chart { position: relative; height: 240px; padding: 0 0 24px 44px; }
+.gridline { position: absolute; left: 44px; right: 0; border-top: 1px solid var(--line); }
+.gridline span { position: absolute; right: 100%; top: -9px; margin-right: 8px; font: 400 12px/1.5 var(--mono); color: var(--ink-3); }
+.bars { position: relative; display: flex; height: 100%; }
+.bar-col { position: relative; flex: 1 1 0; min-width: 0; display: flex; align-items: flex-end; justify-content: center; padding: 0 1px; background: none; border: 0; border-radius: 4px; }
+.bar-col:hover { background: var(--mist); }
+.bar-col:focus-visible { outline-offset: 0; }
+.bar { display: block; width: min(100%, 26px); border-radius: 4px 4px 0 0; background: var(--cobalt); }
+.bar-x { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); padding-top: 6px; font: 400 12px/1.4 var(--mono); color: var(--ink-3); white-space: nowrap; }
+.tip {
+  position: absolute; z-index: 5; pointer-events: none; transform: translate(-50%, -100%);
+  padding: 7px 10px; background: var(--ink); border-radius: 6px; color: #fff; font-size: 13.5px; line-height: 1.3; white-space: nowrap;
+}
+.tip strong { display: block; font: 700 14px/1.3 var(--mono); }
+.table-toggle { margin-top: 12px; font-size: 14.5px; color: var(--ink-2); }
+.table-toggle summary { cursor: pointer; }
+.table-toggle .table-wrap { margin-top: 8px; max-height: 220px; overflow: auto; }
+
+.dist { display: grid; gap: 11px; }
+.dist li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; font-size: 14.5px; }
+.dist-val { font: 600 14px/1.5 var(--mono); }
+.dist-track { grid-column: 1 / -1; height: 8px; }
+.dist-bar { display: block; height: 100%; min-width: 4px; border-radius: 0 4px 4px 0; background: var(--cobalt); }
+
+/* Tabel */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.4; }
+th { padding: 7px 14px 7px 0; text-align: left; font-size: 13.5px; font-weight: 600; color: var(--ink-3); border-bottom: 1px solid #C4CBDE; white-space: nowrap; }
+td { padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: 0; }
+td:last-child, th:last-child { padding-right: 0; }
+.num { text-align: right; font-family: var(--mono); font-size: 14px; }
+.resi-link { padding: 2px 0; background: none; border: 0; color: var(--cobalt); font: 600 14px/1.4 var(--mono); text-decoration: underline; text-underline-offset: 3px; }
+.resi-link:hover { color: var(--cobalt-deep); }
+.pill { display: inline-block; padding: 4px 10px 3px; border-radius: 999px; background: var(--get-bg); color: var(--get); font-weight: 600; font-size: 13.5px; line-height: 1.3; }
+.pill.is-done { background: var(--post-bg); color: var(--post); }
+.pill.is-fail { background: var(--delete-bg); color: var(--delete); }
+.method { display: inline-block; min-width: 62px; padding: 5px 7px 3px; border-radius: 4px; background: var(--get); color: #fff; font: 700 12px/1 var(--mono); text-align: center; }
+.method[data-m="POST"] { background: var(--post); }
+.method[data-m="PUT"] { background: var(--put); }
+.method[data-m="DELETE"] { background: var(--delete); }
+.http { padding: 4px 7px 2px; border-radius: 4px; background: var(--post-bg); color: var(--post); font: 700 12.5px/1 var(--mono); }
+.http.is-error { background: var(--delete-bg); color: var(--delete); }
+.path { font: 500 14px/1.4 var(--mono); }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+.toolbar .field { flex: 1 1 200px; max-width: 320px; margin: 0; }
+.toolbar .input { height: 42px; }
+.segment { display: inline-flex; padding: 3px; background: var(--mist); border-radius: 8px; }
+.segment button { padding: 7px 14px; background: none; border: 0; border-radius: 6px; font-weight: 500; font-size: 14.5px; color: var(--ink-2); }
+.segment button[aria-pressed="true"] { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 0 0 1px var(--line); }
+.empty { padding: 36px 12px; text-align: center; color: var(--ink-2); }
+.empty strong { display: block; font: 800 20px/1.25 var(--display); color: var(--ink); }
+
+/* API key */
+.key-box { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.key-value { flex: 1 1 280px; min-width: 0; padding: 12px 13px 10px; background: var(--mist); border-radius: 8px; font: 500 15px/1.35 var(--mono); overflow-wrap: anywhere; }
+.meter { height: 10px; margin-top: 10px; background: var(--mist); border-radius: 5px; overflow: hidden; }
+.meter span { display: block; height: 100%; border-radius: 5px; background: var(--cobalt); }
+.snippet { padding: 14px; overflow-x: auto; background: var(--ink); border-radius: 8px; color: #D6DEF5; font: 400 13.5px/1.6 var(--mono); }
+.stack { display: grid; gap: 14px; }
+
+/* Dialog */
+dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 0; border-radius: 14px; color: var(--ink); box-shadow: 0 24px 60px rgba(14, 26, 58, .3); }
+dialog::backdrop { background: rgba(14, 26, 58, .5); }
+.dialog-body { padding: 24px; }
+.dialog-body h2 { font: 800 24px/1.2 var(--display); letter-spacing: -.02em; }
+.dialog-lede { margin: 6px 0 18px; color: var(--ink-2); }
+.dialog-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.d-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.d-resi { font: 700 19px/1.3 var(--mono); }
+.d-route { margin-top: 8px; font: 800 24px/1.2 var(--display); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.d-meta { margin-top: 2px; font-size: 14.5px; color: var(--ink-3); }
+.timeline { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.timeline li { position: relative; padding: 0 0 14px 22px; }
+.timeline li:last-child { padding-bottom: 0; }
+.timeline li::before { content: ""; position: absolute; left: 0; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: #fff; border: 2px solid var(--field); }
+.timeline li::after { content: ""; position: absolute; left: 4px; top: 20px; bottom: -3px; width: 1px; background: var(--line); }
+.timeline li:last-child::after { display: none; }
+.timeline li:first-child::before { background: var(--cobalt); border-color: var(--cobalt); }
+.tl-note { font-weight: 600; line-height: 1.35; }
+.tl-sub { font-size: 14px; color: var(--ink-3); }
+
+.toast {
+  position: fixed; left: 50%; bottom: 22px; z-index: 50; transform: translateX(-50%);
+  max-width: calc(100vw - 32px); padding: 10px 16px; background: var(--ink); border-radius: 8px; color: #fff; font-weight: 500;
+}
+
+@media (max-width: 1040px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-2 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 800px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; gap: 10px; padding: 12px 16px 8px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .side .brand { padding-inline: 0; }
+  .side-nav { display: flex; overflow-x: auto; gap: 4px; margin-inline: -4px; padding: 2px 4px; }
+  .side-nav a { flex: none; padding: 8px 10px; }
+  .side-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 0; padding: 8px 0 0; }
+  .side-mail { display: none; }
+  .side-actions { margin-top: 0; flex: none; }
+  .main { padding: 18px 16px 28px; }
+}
+@media (max-width: 420px) {
+  .tile-value { font-size: 28px; }
+  .card { padding: 16px; }
+  .chart { padding-left: 38px; }
+  .gridline { left: 38px; }
+  .two { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .dialog-body { padding: 20px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:12px 16px;background:#FFF5B8">Halaman ini membutuhkan JavaScript. Aktifkan JavaScript untuk masuk dan membuka dashboard.</p></noscript>
+<div id="app"></div>
+<dialog id="dialog"><div class="dialog-body" id="dialogBody"></div></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /*
+   * Semua data di halaman ini simulasi. Akun, sesi, dan pengiriman disimpan
+   * di localStorage browser, jadi autentikasi di sini bukan keamanan sungguhan.
+   * Saat backend tersedia, ganti fungsi di bagian "Akun" dengan panggilan API.
+   */
+  var BASE_URL = 'https://api-d4ti.example/v1';
+  var DEMO = { name: 'Akun Demo', email: 'demo@d4ti.test', password: 'd4ti1234' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+  var num = new Intl.NumberFormat('id-ID');
+
+  /* ---------- Penyimpanan ---------- */
+  var memory = {};
+  var store = {
+    get: function (key, fallback) {
+      var raw = null;
+      try { raw = localStorage.getItem('d4ti.' + key); } catch (e) { raw = null; }
+      if (raw === null && key in memory) raw = memory[key];
+      if (raw === null || raw === undefined) return fallback;
+      try { return JSON.parse(raw); } catch (e) { return fallback; }
+    },
+    set: function (key, value) {
+      var raw = JSON.stringify(value);
+      memory[key] = raw;
+      try { localStorage.setItem('d4ti.' + key, raw); } catch (e) { /* tetap jalan dari memori */ }
+    },
+    remove: function (key) {
+      delete memory[key];
+      try { localStorage.removeItem('d4ti.' + key); } catch (e) { /* abaikan */ }
+    }
+  };
+
+  /* ---------- Akun ---------- */
+  function hashPassword(email, password) {
+    var text = email + ':' + password;
+    if (window.crypto && crypto.subtle && window.TextEncoder) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function (buf) {
+        return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+      });
+    }
+    var h = 5381;
+    for (var i = 0; i < text.length; i++) h = ((h * 33) ^ text.charCodeAt(i)) >>> 0;
+    return Promise.resolve('weak-' + h.toString(16));
+  }
+  function currentUser() { return store.get('session', null); }
+  function startSession(user) { store.set('session', { name: user.name, email: user.email }); }
+
+  function registerUser(name, email, password) {
+    var users = store.get('users', []);
+    if (email === DEMO.email || users.some(function (u) { return u.email === email; })) {
+      return Promise.resolve({ ok: false });
+    }
+    return hashPassword(email, password).then(function (hash) {
+      var user = { name: name, email: email, hash: hash };
+      users.push(user);
+      store.set('users', users);
+      startSession(user);
+      return { ok: true };
+    });
+  }
+  function loginUser(email, password) {
+    if (email === DEMO.email && password === DEMO.password) {
+      startSession(DEMO);
+      return Promise.resolve(true);
+    }
+    var user = store.get('users', []).filter(function (u) { return u.email === email; })[0];
+    if (!user) return Promise.resolve(false);
+    return hashPassword(email, password).then(function (hash) {
+      if (hash !== user.hash) return false;
+      startSession(user);
+      return true;
+    });
+  }
+
+  /* ---------- Data simulasi ---------- */
+  var LABELS = {
+    created: 'Dibuat', picked_up: 'Dijemput', in_transit: 'Dalam perjalanan',
+    out_for_delivery: 'Dibawa kurir', delivered: 'Terkirim', failed: 'Gagal kirim'
+  };
+  var FLOW = ['created', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered'];
+
+  function checkpointFor(status, s, time) {
+    var map = {
+      created: [s.origin, 'Resi diterbitkan'],
+      picked_up: [s.origin, 'Kurir mengambil paket'],
+      in_transit: ['Gudang ' + s.origin, 'Paket berangkat ke ' + s.destination],
+      out_for_delivery: [s.destination, 'Kurir menuju alamat penerima'],
+      delivered: [s.destination, 'Paket diterima oleh penerima'],
+      failed: [s.destination, 'Penerima tidak ada di alamat']
+    };
+    return { time: time, status: status, location: map[status][0], note: map[status][1] };
+  }
+  function seedShipment(n, status, service, origin, destination, hoursAgo) {
+    var s = { resi: 'D4TI-2611-' + String(n).padStart(4, '0'), status: status, service: service, origin: origin, destination: destination };
+    var path = status === 'failed' ? FLOW.slice(0, 4).concat('failed') : FLOW.slice(0, FLOW.indexOf(status) + 1);
+    var now = Date.now();
+    s.checkpoints = path.map(function (st, i) {
+      return checkpointFor(st, s, new Date(now - (hoursAgo + (path.length - 1 - i) * 7) * 3600000).toISOString());
+    }).reverse();
+    return s;
+  }
+  function seedShipments() {
+    return [
+      seedShipment(101, 'in_transit', 'Reguler', 'Bandung', 'Surabaya', 2),
+      seedShipment(102, 'out_for_delivery', 'Kilat', 'Jakarta', 'Semarang', 3),
+      seedShipment(103, 'delivered', 'Kilat', 'Jakarta', 'Yogyakarta', 5),
+      seedShipment(104, 'failed', 'Reguler', 'Medan', 'Padang', 6),
+      seedShipment(105, 'created', 'Reguler', 'Bandung', 'Malang', 8),
+      seedShipment(106, 'picked_up', 'Kargo', 'Surabaya', 'Makassar', 11),
+      seedShipment(107, 'delivered', 'Reguler', 'Bogor', 'Bandung', 20),
+      seedShipment(108, 'in_transit', 'Kargo', 'Semarang', 'Denpasar', 24),
+      seedShipment(109, 'delivered', 'Reguler', 'Palembang', 'Lampung', 30),
+      seedShipment(110, 'in_transit', 'Reguler', 'Solo', 'Jakarta', 33),
+      seedShipment(111, 'delivered', 'Kilat', 'Bekasi', 'Cirebon', 45),
+      seedShipment(112, 'delivered', 'Reguler', 'Depok', 'Tasikmalaya', 52)
+    ];
+  }
+  function seedLogs() {
+    var rows = [
+      ['GET', '/shipments/D4TI-2611-0101/tracking', 200, 84, 4],
+      ['GET', '/shipments/D4TI-2611-0102', 200, 61, 9],
+      ['PUT', '/shipments/D4TI-2611-0102/status', 200, 112, 15],
+      ['GET', '/shipments/D4TI-9999-0001', 404, 38, 22],
+      ['POST', '/shipments', 201, 143, 31],
+      ['DELETE', '/shipments/D4TI-2611-0101', 409, 57, 40],
+      ['GET', '/shipments/abc', 400, 22, 52],
+      ['POST', '/shipments/D4TI-2611-0101/events', 201, 97, 68],
+      ['GET', '/shipments/D4TI-2611-0103/tracking', 200, 73, 85],
+      ['GET', '/shipments/D4TI-2611-0104', 401, 19, 104],
+      ['GET', '/shipments/D4TI-2611-0105', 200, 66, 131],
+      ['GET', '/shipments/D4TI-2611-0106/tracking', 429, 12, 160]
+    ];
+    var now = Date.now();
+    return rows.map(function (r) {
+      return { method: r[0], path: r[1], http: r[2], ms: r[3], time: new Date(now - r[4] * 60000).toISOString() };
+    });
+  }
+  function randomKey() {
+    var hex = '';
+    var bytes = new Uint8Array(12);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else bytes = bytes.map(function () { return Math.floor(Math.random() * 256); });
+    bytes.forEach(function (b) { hex += b.toString(16).padStart(2, '0'); });
+    return 'd4ti_test_' + hex;
+  }
+  function shipments() {
+    var list = store.get('shipments', null);
+    if (!list) { list = seedShipments(); store.set('shipments', list); }
+    return list;
+  }
+  function logs() {
+    var list = store.get('logs', null);
+    if (!list) { list = seedLogs(); store.set('logs', list); }
+    return list;
+  }
+  function apiKey() {
+    var key = store.get('apiKey', null);
+    if (!key) { key = randomKey(); store.set('apiKey', key); }
+    return key;
+  }
+  function addLog(method, path, http, ms) {
+    var list = logs();
+    list.unshift({ method: method, path: path, http: http, ms: ms, time: new Date().toISOString() });
+    store.set('logs', list.slice(0, 50));
+  }
+  function byLatest(a, b) { return b.checkpoints[0].time.localeCompare(a.checkpoints[0].time); }
+
+  var DAILY = [1120, 1342, 1218, 1405, 1276, 612, 548, 1190, 1463, 1381, 1522, 1347, 704, 1284];
+  var QUOTA = 5000;
+  function dailySeries() {
+    var fmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' });
+    var today = new Date();
+    return DAILY.map(function (value, i) {
+      var d = new Date(today);
+      d.setDate(today.getDate() - (DAILY.length - 1 - i));
+      return { label: fmt.format(d), value: value };
+    });
+  }
+
+  /* ---------- Potongan tampilan ---------- */
+  var MARK = '<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1B3FE0"/><path fill="#fff" d="M7 8h3v16H7zM12 8h1.5v16H12zM15.5 8H20v16h-4.5z"/><path fill="#FFD60A" d="M22 8h3v16h-3z"/></svg>';
+  var BRAND = MARK + '<span class="brand-name">API Tracking <span>D4TI</span></span>';
+  var dateTime = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+  function when(iso) { return dateTime.format(new Date(iso)).replace(/\s*pukul\s*/, ', ') + ' WIB'; }
+  function pill(status) {
+    var tone = status === 'delivered' ? ' is-done' : status === 'failed' ? ' is-fail' : '';
+    return '<span class="pill' + tone + '">' + LABELS[status] + '</span>';
+  }
+
+  /* ---------- Masuk dan daftar ---------- */
+  function field(id, label, type, autocomplete) {
+    var input = '<input class="input" id="' + id + '" name="' + id + '" type="' + type + '" autocomplete="' + autocomplete + '" aria-describedby="' + id + '-err">';
+    if (type === 'password') {
+      input = '<div class="password">' + input + '<button type="button" data-action="toggle-password" data-target="' + id + '" aria-pressed="false">Tampilkan</button></div>';
+    }
+    return '<div class="field"><label class="field-label" for="' + id + '">' + label + '</label>' + input +
+      '<p class="field-error" id="' + id + '-err" hidden></p></div>';
+  }
+  function authFrame(inner) {
+    return '<main class="auth">' +
+      '<div class="auth-top"><a class="brand" href="index.html" aria-label="API Tracking D4TI, ke beranda">' + BRAND + '</a><a href="index.html">Ke beranda</a></div>' +
+      '<div class="waybill">' + inner + '</div>' +
+      '<p class="auth-foot">Ini simulasi. Akun hanya tersimpan di browser ini, jadi jangan pakai password asli.</p>' +
+      '</main>';
+  }
+  function viewLogin(notice) {
+    return authFrame(
+      '<div class="waybill-top">' +
+        '<h1 tabindex="-1">Masuk</h1><p class="auth-lede">Lanjutkan ke dashboard API Tracking D4TI.</p>' +
+        (notice ? '<p class="form-note">' + esc(notice) + '</p>' : '') +
+        '<p class="form-error" id="formError" role="alert" hidden></p>' +
+        '<form id="loginForm" novalidate>' +
+          field('email', 'Email', 'email', 'email') +
+          field('password', 'Password', 'password', 'current-password') +
+          '<button class="btn btn-primary btn-block" type="submit">Masuk</button>' +
+        '</form>' +
+        '<p class="auth-switch">Belum punya akun? <a href="#/daftar">Daftar</a></p>' +
+      '</div>' +
+      '<div class="waybill-stub">' +
+        '<p class="stub-title">Akun demo</p>' +
+        '<div class="demo-row"><span>Email</span><code>' + DEMO.email + '</code></div>' +
+        '<div class="demo-row"><span>Password</span><code>' + DEMO.password + '</code></div>' +
+        '<button class="btn btn-block" type="button" data-action="demo-login">Masuk dengan akun demo</button>' +
+      '</div>'
+    );
+  }
+  function viewRegister() {
+    return authFrame(
+      '<div class="waybill-top">' +
+        '<h1 tabindex="-1">Daftar</h1><p class="auth-lede">Buat akun untuk membuka dashboard.</p>' +
+        '<form id="registerForm" novalidate>' +
+          field('name', 'Nama', 'text', 'name') +
+          field('email', 'Email', 'email', 'email') +
+          field('password', 'Password', 'password', 'new-password') +
+          field('confirm', 'Ulangi password', 'password', 'new-password') +
+          '<button class="btn btn-primary btn-block" type="submit">Daftar</button>' +
+        '</form>' +
+        '<p class="auth-switch">Sudah punya akun? <a href="#/masuk">Masuk</a></p>' +
+      '</div>'
+    );
+  }
+  function setErrors(errors) {
+    var first = null;
+    document.querySelectorAll('.input').forEach(function (input) {
+      var msg = errors[input.id];
+      var el = $(input.id + '-err');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.hidden = !msg;
+      if (msg) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+      if (msg && !first) first = input;
+    });
+    if (first) first.focus();
+    return !first;
+  }
+  var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function submitLogin(form) {
+    var email = form.email.value.trim().toLowerCase();
+    var password = form.password.value;
+    var valid = setErrors({
+      email: !email ? 'Masukkan email.' : !EMAIL.test(email) ? 'Tulis email seperti nama@domain.com.' : '',
+      password: !password ? 'Masukkan password.' : ''
+    });
+    if (!valid) return;
+    loginUser(email, password).then(function (ok) {
+      if (ok) { go('#/dashboard'); return; }
+      var el = $('formError');
+      el.textContent = 'Email atau password salah. Periksa lagi, atau daftar akun baru.';
+      el.hidden = false;
+    });
+  }
+  function submitRegister(form) {
+    var name = form.name.value.trim();
+    var email = form.email.value.trim().toLowerCase();
+    var password = form.password.value;
+    var valid = setErrors({
+      name: !name ? 'Masukkan nama.' : '',
+      email: !email ? 'Masukkan email.' : !EMAIL.test(email) ? 'Tulis email seperti nama@domain.com.' : '',
+      password: password.length < 8 ? 'Password minimal 8 karakter.' : '',
+      confirm: form.confirm.value !== password ? 'Password tidak sama.' : ''
+    });
+    if (!valid) return;
+    registerUser(name, email, password).then(function (res) {
+      if (res.ok) { go('#/dashboard'); toast('Akun dibuat'); return; }
+      setErrors({ email: 'Email ini sudah terdaftar. Masuk dengan email tersebut.' });
+    });
+  }
+
+  /* ---------- Dashboard ---------- */
+  var ICONS = {
+    ringkasan: '<path d="M3 3h6v8H3zM11 3h6v5h-6zM11 10h6v7h-6zM3 13h6v4H3z"/>',
+    pengiriman: '<path d="M10 2.5l7 3.5v8l-7 3.5L3 14V6zM3 6l7 3.5L17 6M10 9.5v8"/>',
+    log: '<path d="M4 4h12M4 8h12M4 12h8M4 16h5"/>',
+    'api-key': '<circle cx="6.5" cy="13.5" r="3.5"/><path d="M9 11l8-8M13.5 6.5l2.5 2.5"/>'
+  };
+  var NAV = [['', 'ringkasan', 'Ringkasan'], ['/pengiriman', 'pengiriman', 'Pengiriman'], ['/log', 'log', 'Log request'], ['/api-key', 'api-key', 'API key']];
+
+  function shell(sub, content) {
+    var user = currentUser();
+    return '<div class="shell"><aside class="side">' +
+      '<a class="brand" href="index.html" aria-label="API Tracking D4TI, ke beranda">' + BRAND + '</a>' +
+      '<nav class="side-nav" aria-label="Menu dashboard">' + NAV.map(function (n) {
+        return '<a href="#/dashboard' + n[0] + '"' + (n[0] === sub ? ' aria-current="page"' : '') + '>' +
+          '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + ICONS[n[1]] + '</svg>' + n[2] + '</a>';
+      }).join('') + '</nav>' +
+      '<div class="side-foot"><div><div class="side-user">' + esc(user.name) + '</div><div class="side-mail">' + esc(user.email) + '</div></div>' +
+        '<div class="side-actions"><button class="btn-text" type="button" data-action="logout">Keluar</button>' +
+        '<button class="btn-text" type="button" data-action="ask-reset">Reset data</button></div></div>' +
+      '</aside><main class="main"><div class="main-inner">' + content + '</div></main></div>';
+  }
+  function pageHead(title, lede, right) {
+    return '<div class="page-head"><div><h1 tabindex="-1">' + esc(title) + '</h1>' + (lede ? '<p>' + esc(lede) + '</p>' : '') + '</div>' + (right || '<span class="dummy-tag">data dummy</span>') + '</div>';
+  }
+
+  function chartHtml(series) {
+    var max = Math.ceil(Math.max.apply(null, series.map(function (d) { return d.value; })) / 500) * 500;
+    var ticks = [];
+    for (var t = 0; t <= max; t += 500) ticks.push(t);
+    var lines = ticks.map(function (t) {
+      return '<div class="gridline" style="bottom:calc(24px + (100% - 24px) * ' + (t / max) + ')"><span>' + num.format(t) + '</span></div>';
+    }).join('');
+    var bars = series.map(function (d, i) {
+      var showX = i % 3 === 1 || i === series.length - 1;
+      return '<button type="button" class="bar-col" data-tip-label="' + esc(d.label) + '" data-tip-value="' + num.format(d.value) + ' request" aria-label="' + esc(d.label) + ': ' + num.format(d.value) + ' request">' +
+        '<span class="bar" style="height:' + (d.value / max * 100) + '%"></span>' +
+        (showX && i !== series.length - 2 ? '<span class="bar-x">' + esc(d.label) + '</span>' : '') + '</button>';
+    }).join('');
+    return '<div class="chart" id="chart">' + lines + '<div class="bars">' + bars + '</div><div class="tip" id="tip" hidden></div></div>';
+  }
+  function shipmentRows(list) {
+    return list.map(function (s) {
+      return '<tr><td><button type="button" class="resi-link" data-action="open-shipment" data-resi="' + esc(s.resi) + '">' + esc(s.resi) + '</button></td>' +
+        '<td>' + esc(s.origin) + ' → ' + esc(s.destination) + '</td><td>' + esc(s.service) + '</td><td>' + pill(s.status) + '</td><td>' + when(s.checkpoints[0].time) + '</td></tr>';
+    }).join('');
+  }
+  var SHIPMENT_HEAD = '<thead><tr><th scope="col">Resi</th><th scope="col">Rute</th><th scope="col">Layanan</th><th scope="col">Status</th><th scope="col">Pembaruan terakhir</th></tr></thead>';
+
+  function viewOverview() {
+    var user = currentUser();
+    var list = shipments();
+    var series = dailySeries();
+    var today = series[series.length - 1].value, yesterday = series[series.length - 2].value;
+    var diff = Math.round((today - yesterday) / yesterday * 100);
+    var count = function (st) { return list.filter(function (s) { return s.status === st; }).length; };
+    var active = list.length - count('delivered') - count('failed');
+    var statuses = FLOW.concat('failed');
+    var top = Math.max.apply(null, statuses.map(count)) || 1;
+
+    return pageHead('Halo, ' + user.name, 'Ringkasan pemakaian API dan pengiriman kamu.') +
+      '<div class="tiles">' +
+        tile('Request hari ini', num.format(today), (diff >= 0 ? '+' : '') + diff + '% dari kemarin') +
+        tile('Paket aktif', num.format(active), 'sedang diproses') +
+        tile('Terkirim', num.format(count('delivered')), 'dari ' + list.length + ' pengiriman') +
+        tile('Gagal kirim', num.format(count('failed')), count('failed') ? 'perlu ditindaklanjuti' : 'tidak ada kendala') +
+      '</div>' +
+      '<div class="grid-2">' +
+        '<section class="card"><div class="card-head"><h2>Request per hari</h2><span class="card-sub">14 hari terakhir</span></div>' + chartHtml(series) +
+          '<details class="table-toggle"><summary>Lihat sebagai tabel</summary><div class="table-wrap"><table><thead><tr><th scope="col">Tanggal</th><th scope="col" class="num">Request</th></tr></thead><tbody>' +
+          series.map(function (d) { return '<tr><td>' + esc(d.label) + '</td><td class="num">' + num.format(d.value) + '</td></tr>'; }).join('') +
+          '</tbody></table></div></details></section>' +
+        '<section class="card"><div class="card-head"><h2>Status pengiriman</h2><span class="card-sub">jumlah paket</span></div><ul class="dist">' +
+          statuses.map(function (st) {
+            var n = count(st);
+            return '<li><span>' + LABELS[st] + '</span><span class="dist-val">' + n + '</span><span class="dist-track"><span class="dist-bar" style="width:' + (n / top * 100) + '%"></span></span></li>';
+          }).join('') + '</ul></section>' +
+      '</div>' +
+      '<section class="card"><div class="card-head"><h2>Pengiriman terbaru</h2><a href="#/dashboard/pengiriman">Lihat semua</a></div>' +
+        '<div class="table-wrap" tabindex="0" role="region" aria-label="Pengiriman terbaru"><table>' + SHIPMENT_HEAD + '<tbody>' + shipmentRows(list.slice().sort(byLatest).slice(0, 5)) + '</tbody></table></div></section>';
+  }
+  function tile(label, value, note) {
+    return '<div class="card"><div class="tile-label">' + label + '</div><div class="tile-value">' + value + '</div><div class="tile-note">' + note + '</div></div>';
+  }
+
+  var filters = { q: '', status: '', log: 'all' };
+  function viewShipments() {
+    return pageHead('Pengiriman', 'Cari paket, buat pengiriman baru, atau perbarui statusnya.', '<button class="btn btn-primary" type="button" data-action="new-shipment">Buat pengiriman</button>') +
+      '<section class="card"><div class="toolbar">' +
+        '<div class="field"><label class="field-label" for="q">Cari resi atau kota</label><input class="input" id="q" type="search" value="' + esc(filters.q) + '" autocomplete="off"></div>' +
+        '<div class="field"><label class="field-label" for="statusFilter">Status</label><select class="input" id="statusFilter"><option value="">Semua status</option>' +
+          FLOW.concat('failed').map(function (st) { return '<option value="' + st + '"' + (filters.status === st ? ' selected' : '') + '>' + LABELS[st] + '</option>'; }).join('') + '</select></div>' +
+      '</div><div id="shipmentTable"></div></section>';
+  }
+  function renderShipmentTable() {
+    var box = $('shipmentTable');
+    if (!box) return;
+    var q = filters.q.trim().toLowerCase();
+    var list = shipments().filter(function (s) {
+      var text = (s.resi + ' ' + s.origin + ' ' + s.destination).toLowerCase();
+      return (!q || text.indexOf(q) > -1) && (!filters.status || s.status === filters.status);
+    }).sort(byLatest);
+    box.innerHTML = list.length
+      ? '<div class="table-wrap" tabindex="0" role="region" aria-label="Daftar pengiriman"><table>' + SHIPMENT_HEAD + '<tbody>' + shipmentRows(list) + '</tbody></table></div>'
+      : '<div class="empty"><strong>Tidak ada pengiriman yang cocok</strong>Ubah kata kunci atau pilih status lain.</div>';
+  }
+
+  function viewLogs() {
+    var options = [['all', 'Semua'], ['ok', 'Berhasil'], ['error', 'Error']];
+    return pageHead('Log request', 'Request terbaru yang masuk ke API kamu.') +
+      '<section class="card"><div class="toolbar"><div class="segment" role="group" aria-label="Filter hasil">' + options.map(function (o) {
+        return '<button type="button" data-action="log-filter" data-value="' + o[0] + '" aria-pressed="' + (filters.log === o[0]) + '">' + o[1] + '</button>';
+      }).join('') + '</div></div><div id="logTable"></div></section>';
+  }
+  function renderLogTable() {
+    var box = $('logTable');
+    if (!box) return;
+    var list = logs().filter(function (l) {
+      return filters.log === 'all' || (filters.log === 'ok' ? l.http < 400 : l.http >= 400);
+    });
+    box.innerHTML = '<div class="table-wrap" tabindex="0" role="region" aria-label="Log request"><table><thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Status</th><th scope="col" class="num">Durasi</th><th scope="col">Waktu</th></tr></thead><tbody>' +
+      list.map(function (l) {
+        return '<tr><td><span class="method" data-m="' + l.method + '">' + l.method + '</span></td><td class="path">' + esc(l.path) + '</td>' +
+          '<td><span class="http' + (l.http >= 400 ? ' is-error' : '') + '">' + l.http + '</span></td><td class="num">' + l.ms + ' ms</td><td>' + when(l.time) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  var keyVisible = false;
+  function maskedKey() {
+    var key = apiKey();
+    return keyVisible ? key : 'd4ti_test_' + '•'.repeat(16) + key.slice(-4);
+  }
+  function viewKey() {
+    var used = DAILY[DAILY.length - 1];
+    return pageHead('API key', 'Pakai key ini di header setiap request.') +
+      '<div class="stack">' +
+      '<section class="card"><div class="card-head"><h2>Key aktif</h2><span class="card-sub">mode test</span></div>' +
+        '<div class="key-box"><div class="key-value" id="keyValue">' + esc(maskedKey()) + '</div>' +
+        '<button class="btn" type="button" data-action="toggle-key" id="keyToggle" aria-pressed="' + keyVisible + '">' + (keyVisible ? 'Sembunyikan' : 'Tampilkan') + '</button>' +
+        '<button class="btn" type="button" data-action="copy-key">Salin</button>' +
+        '<button class="btn" type="button" data-action="ask-rotate">Buat ulang</button></div></section>' +
+      '<section class="card"><div class="card-head"><h2>Kuota hari ini</h2><span class="card-sub">' + num.format(used) + ' dari ' + num.format(QUOTA) + ' request</span></div>' +
+        '<div class="meter" role="img" aria-label="Terpakai ' + Math.round(used / QUOTA * 100) + ' persen"><span style="width:' + (used / QUOTA * 100) + '%"></span></div></section>' +
+      '<section class="card"><div class="card-head"><h2>Contoh pemakaian</h2></div><pre class="snippet" tabindex="0">curl "' + BASE_URL + '/shipments/D4TI-2611-0101" \\\n  -H "Authorization: Bearer API_KEY"</pre></section>' +
+      '</div>';
+  }
+
+  /* ---------- Dialog ---------- */
+  function openDialog(html) {
+    $('dialogBody').innerHTML = html;
+    var d = $('dialog');
+    if (!d.open) d.showModal();
+  }
+  function closeDialog() { if ($('dialog').open) $('dialog').close(); }
+
+  function dialogShipment(resi) {
+    var s = shipments().filter(function (x) { return x.resi === resi; })[0];
+    if (!s) return;
+    var next = nextStatus(s.status);
+    openDialog(
+      '<div class="d-head"><h2 class="d-resi">' + esc(s.resi) + '</h2>' + pill(s.status) + '</div>' +
+      '<div class="d-route">' + esc(s.origin) + ' → ' + esc(s.destination) + '</div><div class="d-meta">Layanan ' + esc(s.service) + '</div>' +
+      '<ol class="timeline" aria-label="Riwayat perjalanan">' + s.checkpoints.map(function (c) {
+        return '<li><div class="tl-note">' + esc(c.note) + '</div><div class="tl-sub">' + esc(c.location) + ' · ' + when(c.time) + '</div></li>';
+      }).join('') + '</ol>' +
+      '<div class="dialog-actions"><button class="btn" type="button" data-action="close-dialog">Tutup</button>' +
+      (next ? '<button class="btn btn-primary" type="button" data-action="advance" data-resi="' + esc(s.resi) + '">Ubah ke ' + LABELS[next] + '</button>' : '') + '</div>'
+    );
+  }
+  function nextStatus(status) {
+    if (status === 'failed') return 'out_for_delivery';
+    return FLOW[FLOW.indexOf(status) + 1] || null;
+  }
+  function advance(resi) {
+    var list = shipments();
+    var s = list.filter(function (x) { return x.resi === resi; })[0];
+    var next = s && nextStatus(s.status);
+    if (!next) return;
+    s.status = next;
+    s.checkpoints.unshift(checkpointFor(next, s, new Date().toISOString()));
+    store.set('shipments', list);
+    addLog('PUT', '/shipments/' + resi + '/status', 200, 96);
+    render();
+    dialogShipment(resi);
+    toast('Status diperbarui ke ' + LABELS[next]);
+  }
+  function dialogNewShipment() {
+    openDialog(
+      '<h2>Buat pengiriman</h2><p class="dialog-lede">Resi terbit otomatis setelah pengiriman dibuat.</p>' +
+      '<form id="shipmentForm" novalidate><div class="two">' +
+        field('origin', 'Kota asal', 'text', 'off') + field('destination', 'Kota tujuan', 'text', 'off') +
+      '</div><div class="field"><label class="field-label" for="service">Layanan</label><select class="input" id="service"><option>Reguler</option><option>Kilat</option><option>Kargo</option></select></div>' +
+      '<div class="dialog-actions"><button class="btn" type="button" data-action="close-dialog">Batal</button><button class="btn btn-primary" type="submit">Buat pengiriman</button></div></form>'
+    );
+  }
+  function submitShipment(form) {
+    var origin = form.origin.value.trim(), destination = form.destination.value.trim();
+    var valid = setErrors({ origin: origin ? '' : 'Masukkan kota asal.', destination: destination ? '' : 'Masukkan kota tujuan.' });
+    if (!valid) return;
+    var list = shipments();
+    var d = new Date();
+    var prefix = 'D4TI-' + String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + '-';
+    var n = 200, resi;
+    do { n += 1; resi = prefix + String(n).padStart(4, '0'); } while (list.some(function (s) { return s.resi === resi; }));
+    var s = { resi: resi, status: 'created', service: form.service.value, origin: origin, destination: destination };
+    s.checkpoints = [checkpointFor('created', s, d.toISOString())];
+    list.push(s);
+    store.set('shipments', list);
+    addLog('POST', '/shipments', 201, 128);
+    closeDialog();
+    render();
+    toast('Pengiriman ' + resi + ' dibuat');
+  }
+  function dialogConfirm(title, text, action, label) {
+    openDialog('<h2>' + title + '</h2><p class="dialog-lede">' + text + '</p><div class="dialog-actions">' +
+      '<button class="btn" type="button" data-action="close-dialog">Batal</button>' +
+      '<button class="btn btn-danger" type="button" data-action="' + action + '">' + label + '</button></div>');
+  }
+
+  /* ---------- Rute ---------- */
+  var loginNotice = '';
+  function go(hash) {
+    if (location.hash === hash) render();
+    else location.hash = hash;
+  }
+  function render() {
+    var hash = location.hash.replace(/^#/, '') || '/masuk';
+    var user = currentUser();
+    var app = $('app');
+    var title = 'API Tracking D4TI';
+
+    if (hash.indexOf('/dashboard') === 0) {
+      if (!user) {
+        loginNotice = 'Masuk dulu untuk membuka dashboard.';
+        location.replace('#/masuk');
+        return;
+      }
+      var sub = hash.slice('/dashboard'.length);
+      var views = { '': [viewOverview, 'Ringkasan'], '/pengiriman': [viewShipments, 'Pengiriman'], '/log': [viewLogs, 'Log request'], '/api-key': [viewKey, 'API key'] };
+      var view = views[sub] || views[''];
+      app.innerHTML = shell(views[sub] ? sub : '', view[0]());
+      renderShipmentTable();
+      renderLogTable();
+      title = view[1] + ' · API Tracking D4TI';
+    } else if (user) {
+      location.replace('#/dashboard');
+      return;
+    } else if (hash === '/daftar') {
+      app.innerHTML = viewRegister();
+      title = 'Daftar · API Tracking D4TI';
+    } else {
+      app.innerHTML = viewLogin(loginNotice);
+      loginNotice = '';
+      title = 'Masuk · API Tracking D4TI';
+    }
+    document.title = title;
+  }
+  function renderAndFocus() {
+    render();
+    var h1 = document.querySelector('#app h1');
+    if (h1) h1.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
+
+  var toastTimer;
+  function toast(text) {
+    var el = $('toast');
+    el.textContent = text;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
+  }
+  function copyText(text) {
+    var fallback = function () {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      ta.remove();
+      toast(ok ? 'API key tersalin' : 'Gagal menyalin. Tampilkan key, lalu salin manual.');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast('API key tersalin'); }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  /* ---------- Aksi ---------- */
+  var actions = {
+    'toggle-password': function (btn) {
+      var input = $(btn.dataset.target);
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? 'Sembunyikan' : 'Tampilkan';
+      btn.setAttribute('aria-pressed', String(show));
+    },
+    'demo-login': function () { startSession(DEMO); go('#/dashboard'); },
+    'logout': function () { store.remove('session'); keyVisible = false; go('#/masuk'); },
+    'ask-reset': function () {
+      dialogConfirm('Reset data dummy?', 'Pengiriman, log, dan API key kembali ke kondisi awal. Akun kamu tetap ada.', 'reset', 'Reset data');
+    },
+    'reset': function () {
+      ['shipments', 'logs', 'apiKey'].forEach(store.remove);
+      closeDialog();
+      render();
+      toast('Data dummy direset');
+    },
+    'open-shipment': function (btn) { dialogShipment(btn.dataset.resi); },
+    'new-shipment': dialogNewShipment,
+    'advance': function (btn) { advance(btn.dataset.resi); },
+    'close-dialog': closeDialog,
+    'log-filter': function (btn) {
+      filters.log = btn.dataset.value;
+      document.querySelectorAll('.segment button').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      renderLogTable();
+    },
+    'toggle-key': function (btn) {
+      keyVisible = !keyVisible;
+      $('keyValue').textContent = maskedKey();
+      btn.textContent = keyVisible ? 'Sembunyikan' : 'Tampilkan';
+      btn.setAttribute('aria-pressed', String(keyVisible));
+    },
+    'copy-key': function () { copyText(apiKey()); },
+    'ask-rotate': function () {
+      dialogConfirm('Buat ulang API key?', 'Key lama langsung berhenti berlaku. Aplikasi yang memakainya perlu diganti ke key baru.', 'rotate', 'Buat ulang');
+    },
+    'rotate': function () {
+      store.set('apiKey', randomKey());
+      closeDialog();
+      render();
+      toast('API key baru dibuat');
+    }
+  };
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('[data-action]');
+    if (btn && actions[btn.dataset.action]) actions[btn.dataset.action](btn);
+  });
+  document.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var handlers = { loginForm: submitLogin, registerForm: submitRegister, shipmentForm: submitShipment };
+    if (handlers[ev.target.id]) handlers[ev.target.id](ev.target);
+  });
+  document.addEventListener('input', function (ev) {
+    if (ev.target.id === 'q') { filters.q = ev.target.value; renderShipmentTable(); }
+    if (ev.target.id === 'statusFilter') { filters.status = ev.target.value; renderShipmentTable(); }
+  });
+
+  function showTip(col) {
+    var chart = $('chart'), tip = $('tip');
+    if (!chart || !tip) return;
+    var c = chart.getBoundingClientRect(), r = col.getBoundingClientRect(), bar = col.querySelector('.bar').getBoundingClientRect();
+    tip.innerHTML = '<strong>' + esc(col.dataset.tipValue) + '</strong>' + esc(col.dataset.tipLabel);
+    tip.hidden = false;
+    var half = tip.offsetWidth / 2;
+    var x = Math.min(Math.max(r.left + r.width / 2 - c.left, half), c.width - half);
+    tip.style.left = x + 'px';
+    tip.style.top = Math.max(bar.top - c.top - 6, tip.offsetHeight) + 'px';
+  }
+  function hideTip() { var tip = $('tip'); if (tip) tip.hidden = true; }
+  ['pointerover', 'focusin'].forEach(function (type) {
+    document.addEventListener(type, function (ev) {
+      var col = ev.target.closest && ev.target.closest('.bar-col');
+      if (col) showTip(col);
+    });
+  });
+  ['pointerout', 'focusout'].forEach(function (type) {
+    document.addEventListener(type, function (ev) {
+      if (ev.target.closest && ev.target.closest('.bar-col')) hideTip();
+    });
+  });
+
+  window.addEventListener('hashchange', renderAndFocus);
+  render();
+})();
+</script>
+</body>
+</html>
